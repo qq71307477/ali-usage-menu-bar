@@ -53,6 +53,15 @@ if [ ! -f "$RESOURCES_DIR/AppIcon.icns" ]; then
     cp "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns" "$RESOURCES_DIR/AppIcon.icns" 2>/dev/null || true
 fi
 
+echo "复制 scripts 目录..."
+SCRIPTS_SRC="../scripts"
+if [ -d "$SCRIPTS_SRC" ]; then
+    cp -r "$SCRIPTS_SRC" "$RESOURCES_DIR/scripts"
+    echo "scripts 目录已复制"
+else
+    echo "警告: 找不到 scripts 目录 ($SCRIPTS_SRC)"
+fi
+
 echo ""
 echo "✅ 构建完成！"
 echo ""
