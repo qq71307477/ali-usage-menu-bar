@@ -70,10 +70,11 @@ echo ""
 
 # 签名
 echo "签名应用..."
-codesign --force --deep --sign - ".build/$APP_NAME" 2>/dev/null || true
+codesign --force --deep --sign - ".build/$APP_NAME"
 
-echo "安装到 Applications:"
-echo "  cp -r \".build/$APP_NAME\" /Applications/"
+echo ""
+echo "安装到 Applications (复制后需重新签名):"
+echo "  cp -r \".build/$APP_NAME\" /Applications/ && codesign --force --deep --sign - \"/Applications/$APP_NAME\""
 echo ""
 echo "或直接双击运行:"
 echo "  open \".build/$APP_NAME\""
