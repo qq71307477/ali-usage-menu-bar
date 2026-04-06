@@ -29,6 +29,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NotificationCenter.default.post(name: .refreshUsage, object: nil)
         }
         RunLoop.main.add(refreshTimer!, forMode: .common)
+
+        // 启动时自动刷新
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NotificationCenter.default.post(name: .refreshUsage, object: nil)
+        }
     }
 
     func updateStatusItem(fiveHour: Double, week: Double, month: Double) {

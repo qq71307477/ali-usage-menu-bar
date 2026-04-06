@@ -10,6 +10,11 @@ class UsageViewModel: ObservableObject {
     @Published var lastUpdated: Date?
     @Published var showLoginPrompt = false
 
+    init() {
+        // 初始化时自动刷新
+        refresh()
+    }
+
     // MARK: - 刷新数据
 
     func refresh() {
