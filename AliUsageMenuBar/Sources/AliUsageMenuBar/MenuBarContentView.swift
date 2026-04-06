@@ -120,6 +120,9 @@ struct MenuBarContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .refreshUsage)) { _ in
             viewModel.refresh()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .clearUsageData)) { _ in
+            viewModel.clearData()
+        }
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }

@@ -58,4 +58,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension Notification.Name {
     static let refreshUsage = Notification.Name("refreshUsage")
+    static let clearUsageData = Notification.Name("clearUsageData")
 }

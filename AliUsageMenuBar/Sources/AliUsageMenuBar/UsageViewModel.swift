@@ -77,4 +77,14 @@ class UsageViewModel: ObservableObject {
             self.error = "获取数据失败: \(error.localizedDescription)"
         }
     }
+
+    // MARK: - 清除数据
+
+    func clearData() {
+        usageData = nil
+        lastUpdated = nil
+        error = nil
+        // 重置菜单栏显示
+        AppDelegate.shared?.updateStatusItem(fiveHour: 0, week: 0, month: 0)
+    }
 }

@@ -133,8 +133,9 @@ struct SettingsView: View {
             if CookieManager.shared.loadFromFile() {
                 await MainActor.run {
                     loginResult = "登录成功！"
-                    isLoggedIn = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    // 发送刷新通知
+                    NotificationCenter.default.post(name: .refreshUsage, object: nil)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         dismiss()
                     }
                 }
@@ -157,5 +158,8 @@ struct SettingsView: View {
         isLoggedIn = false
         loginResult = "已退出登录"
         loginStep = .idle
+
+        // 发送通知清除数据
+        NotificationCenter.default.post(name: .clearUsageData, object: nil)
     }
 }
