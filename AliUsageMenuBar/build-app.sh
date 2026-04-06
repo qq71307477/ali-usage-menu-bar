@@ -67,6 +67,11 @@ echo "✅ 构建完成！"
 echo ""
 echo "应用位置: $(pwd)/.build/$APP_NAME"
 echo ""
+
+# 签名
+echo "签名应用..."
+codesign --force --deep --sign - ".build/$APP_NAME" 2>/dev/null || true
+
 echo "安装到 Applications:"
 echo "  cp -r \".build/$APP_NAME\" /Applications/"
 echo ""
