@@ -64,6 +64,13 @@ class LoginService {
     // MARK: - 打开浏览器（不等待）
 
     func openBrowserForLogin() async throws -> Bool {
+        // 先清理旧的 login.js 进程
+        let killProcess = Process()
+        killProcess.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        killProcess.arguments = ["pkill", "-f", "login.js"]
+        try? killProcess.run()
+        killProcess.waitUntilExit()
+
         let loginScript = URL(fileURLWithPath: scriptsPath).appendingPathComponent("login.js").path
 
         print("[LoginService] 登录脚本路径: \(loginScript)")

@@ -1,0 +1,21 @@
+# Dependencies
+scripts/node_modules/
+
+# Build artifacts
+.build/
+DerivedData/
+*.app
+
+# Swift package
+Package.resolved
+*.xcodeproj/
+
+# macOS
+.DS_Store
+
+# IDE
+*.swp
+*.swo
+
+# User data (cookies stored in ~/Library/Application Support/AliUsageMenuBar/)
+# This directory is NOT in the project, so won't be uploaded anyway

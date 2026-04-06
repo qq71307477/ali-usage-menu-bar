@@ -30,9 +30,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         RunLoop.main.add(refreshTimer!, forMode: .common)
 
-        // 启动时自动刷新
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            NotificationCenter.default.post(name: .refreshUsage, object: nil)
+        // 启动后立即刷新数据
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.fetchAndUpdateUsage()
+        }
+    }
+
+    private func fetchAndUpdateUsage() async {
+        guard let (cookie, secToken) = CookieManager.shared.getCookie() else {
+            print("[AppDelegate] 没有 Cookie")
+            return
+        }
+
+        do {
+            let data = try await UsageAPIClient.shared.fetchUsage()
+            if let quota = data.quotaInfo {
+                await MainActor.run {
+                    self.updateStatusItem(
+                        fiveHour: quota.fiveHourPercent,
+                        week: quota.weekPercent,
+                        month: quota.monthPercent
+                    )
+                }
+            }
+        } catch {
+            print("[AppDelegate] 获取数据失败: \(error)")
         }
     }
 
@@ -58,6 +81,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func hidePopover(_ sender: AnyObject?) {
         popover.performClose(sender)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // 清理所有后台 login.js 进程
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["pkill", "-f", "login.js"]
+        try? process.run()
+        process.waitUntilExit()
+        print("[AppDelegate] 应用退出，已清理后台进程")
     }
 }
 
