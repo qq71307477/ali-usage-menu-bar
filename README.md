@@ -26,9 +26,10 @@ macOS 菜单栏应用，监控阿里云百炼 Coding Plan API 用量百分比。
 ```bash
 cd scripts
 npm install
+npx playwright install-deps chrome
 ```
 
-> 注：项目使用本机已安装的 Chrome 浏览器，无需下载额外浏览器驱动。
+> 注：项目使用本机已安装的 Chrome 浏览器，`install-deps` 只安装必要的系统依赖，不下载浏览器。
 
 ### 2. 构建 .app 包
 
