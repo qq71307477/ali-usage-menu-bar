@@ -21,13 +21,25 @@ macOS 菜单栏应用，监控阿里云百炼 Coding Plan API 用量百分比。
 
 ## 安装
 
+### 1. 安装依赖
+
 ```bash
-# 构建 .app 包
+cd scripts
+npm install
+npx playwright install chromium
+```
+
+### 2. 构建 .app 包
+
+```bash
 cd AliUsageMenuBar
 swift build -c release
 ./build-app.sh
+```
 
-# 安装到 Applications
+### 3. 安装到 Applications
+
+```bash
 cp -r ".build/阿里云百炼用量.app" /Applications/
 codesign --force --deep --sign - "/Applications/阿里云百炼用量.app"
 ```
