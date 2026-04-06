@@ -36,29 +36,10 @@ async function login() {
     console.error('[登录] 请在浏览器中完成登录...');
     console.error('[登录] 登录成功后会自动检测并保存 Cookie');
 
-    // 等待登录成功（检测实际的用量数据）
+    // 等待登录成功（主要检测 SEC_TOKEN）
     let loggedIn = false;
     for (let i = 0; i < 60; i++) {
       await page.waitForTimeout(5000);
-
-      // 检查是否有登录框（如果有说明还没登录）
-      const hasLoginForm = await page.evaluate(() => {
-        const iframes = document.querySelectorAll('iframe');
-        for (const iframe of iframes) {
-          if (iframe.title === 'login' || iframe.id?.includes('login')) {
-            return true;
-          }
-        }
-        const text = document.body.innerText;
-        return text.includes('立即登录') || text.includes('登录以使用');
-      });
-
-      if (hasLoginForm) {
-        if (i % 6 === 0) {
-          console.error(`[登录] 检测到登录界面，等待用户登录... (${Math.floor(i / 12) + 1}/5 分钟)`);
-        }
-        continue;
-      }
 
       // 检查是否有 SEC_TOKEN（登录后才有）
       const secToken = await page.evaluate(() => {
@@ -68,22 +49,16 @@ async function login() {
         return '';
       });
 
-      // 检查页面是否有真实的用量数字（如百分比或配额数据）
-      const hasUsageData = await page.evaluate(() => {
-        const text = document.body.innerText;
-        // 匹配类似 "近5小时" 和数字百分比
-        return /近5小时.*\d+%/.test(text) || /近一月.*\d+%/.test(text) || /额度.*\d+/.test(text);
-      });
-
-      if (secToken && hasUsageData) {
-        console.error('[登录] 检测到用量数据和 SEC_TOKEN，确认登录成功！');
+      if (secToken) {
+        console.error('[登录] 检测到 SEC_TOKEN，登录成功！');
         loggedIn = true;
         break;
-      } else if (secToken) {
-        console.error('[登录] 检测到 SEC_TOKEN，等待数据加载...');
-      } else if (hasUsageData) {
-        console.error('[登录] 检测到用量数据，等待 SEC_TOKEN...');
       }
+
+      if (i % 6 === 0) {
+        console.error(`[登录] 等待登录... (${Math.floor(i / 12) + 1}/5 分钟)`);
+      }
+    }
     }
 
     if (!loggedIn) {
