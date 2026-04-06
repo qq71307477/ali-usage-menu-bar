@@ -59,7 +59,6 @@ async function login() {
         console.error(`[登录] 等待登录... (${Math.floor(i / 12) + 1}/5 分钟)`);
       }
     }
-    }
 
     if (!loggedIn) {
       console.error('[登录] 超时未检测到登录成功');
