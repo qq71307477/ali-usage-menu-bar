@@ -103,7 +103,8 @@ class UsageAPIClient {
             guard response.code == "200",
                   let codingPlanData = response.data,
                   let dataV2 = codingPlanData.DataV2,
-                  let instanceData = dataV2.data,
+                  let innerData = dataV2.data,
+                  let instanceData = innerData.data,
                   let instances = instanceData.codingPlanInstanceInfos,
                   let firstInstance = instances.first else {
                 throw UsageError.decodeError("响应结构不符合预期")

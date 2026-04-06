@@ -14,8 +14,12 @@ struct CodingPlanData: Codable {
 }
 
 struct DataV2Response: Codable {
-    let data: CodingPlanInstanceData?
+    let data: DataV2Data?
     let success: Bool?
+}
+
+struct DataV2Data: Codable {
+    let data: CodingPlanInstanceData?
 }
 
 struct CodingPlanInstanceData: Codable {
