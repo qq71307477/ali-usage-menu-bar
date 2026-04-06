@@ -15,7 +15,7 @@ struct MenuBarContentView: View {
 
                 Spacer()
 
-                if viewModel.isLoading || viewModel.isLoggingIn {
+                if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(0.6)
                 }

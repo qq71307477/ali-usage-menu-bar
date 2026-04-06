@@ -3,93 +3,81 @@ import SwiftUI
 @available(macOS 12.0, *)
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("aliyunUsername") private var username: String = ""
-    @AppStorage("aliyunPassword") private var password: String = ""
-    @State private var showPassword = false
-    @State private var isTesting = false
-    @State private var testResult: String?
+    @State private var isLoggingIn = false
+    @State private var loginResult: String?
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("配置")
+        VStack(spacing: 24) {
+            Text("阿里云百炼登录")
                 .font(.headline)
 
-            Form {
-                Section("阿里云账号") {
-                    TextField("手机号", text: $username)
-                        .textFieldStyle(.roundedBorder)
+            VStack(spacing: 12) {
+                Text("点击下方按钮打开浏览器进行登录")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
 
-                    HStack {
-                        if showPassword {
-                            TextField("密码", text: $password)
-                                .textFieldStyle(.roundedBorder)
-                        } else {
-                            SecureField("密码", text: $password)
-                                .textFieldStyle(.roundedBorder)
-                        }
+                Text("登录成功后 Cookie 会自动保存")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
 
-                        Button { showPassword.toggle() } label: {
-                            Image(systemName: showPassword ? "eye.slash" : "eye")
-                        }
-                        .buttonStyle(.plain)
+            Button(action: performLogin) {
+                HStack {
+                    if isLoggingIn {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("等待登录...")
+                    } else {
+                        Image(systemName: "person.badge.key")
+                        Text("打开浏览器登录")
                     }
                 }
-
-                Section {
-                    Button(action: testLogin) {
-                        HStack {
-                            if isTesting {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text("登录中...")
-                            } else {
-                                Text("测试登录")
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .disabled(username.isEmpty || password.isEmpty || isTesting)
-                    .buttonStyle(.borderedProminent)
-
-                    if let result = testResult {
-                        Text(result)
-                            .font(.caption)
-                            .foregroundColor(result.contains("成功") ? .green : .red)
-                    }
-                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
             }
-            .padding()
+            .disabled(isLoggingIn)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
 
-            HStack {
-                Button("取消") { dismiss() }
-                    .keyboardShortcut(.escape)
-
-                Spacer()
-
-                Button("保存") { dismiss() }
-                    .keyboardShortcut(.return)
-                    .buttonStyle(.borderedProminent)
+            if let result = loginResult {
+                Text(result)
+                    .font(.caption)
+                    .foregroundColor(result.contains("成功") ? .green : .red)
+                    .multilineTextAlignment(.center)
             }
+
+            Spacer()
+
+            Button("关闭") { dismiss() }
+                .keyboardShortcut(.escape)
         }
-        .padding()
-        .frame(width: 350, height: 300)
+        .padding(24)
+        .frame(width: 320, height: 260)
     }
 
-    private func testLogin() {
-        isTesting = true
-        testResult = nil
+    private func performLogin() {
+        isLoggingIn = true
+        loginResult = nil
 
         Task {
             do {
-                let success = try await LoginService.shared.performLogin(username: username, password: password)
+                let success = try await LoginService.shared.performLogin(username: "", password: "")
                 await MainActor.run {
-                    testResult = success ? "登录成功！" : "登录失败"
-                    isTesting = false
+                    if success {
+                        loginResult = "登录成功！"
+                        // 延迟关闭
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            dismiss()
+                        }
+                    } else {
+                        loginResult = "登录失败"
+                    }
+                    isLoggingIn = false
                 }
             } catch {
                 await MainActor.run {
-                    testResult = "登录失败: \(error.localizedDescription)"
-                    isTesting = false
+                    loginResult = "登录失败: \(error.localizedDescription)"
+                    isLoggingIn = false
                 }
             }
         }

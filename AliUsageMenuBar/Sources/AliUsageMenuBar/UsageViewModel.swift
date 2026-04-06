@@ -8,7 +8,7 @@ class UsageViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var lastUpdated: Date?
-    @Published var isLoggingIn = false
+    @Published var showLoginPrompt = false
 
     // MARK: - 刷新数据
 
@@ -22,7 +22,10 @@ class UsageViewModel: ObservableObject {
             do {
                 // 检查是否需要登录
                 if LoginService.shared.needsLogin {
-                    throw UsageError.cookieExpired
+                    self.error = "请先登录"
+                    self.showLoginPrompt = true
+                    self.isLoading = false
+                    return
                 }
 
                 let data = try await UsageAPIClient.shared.fetchUsage()
@@ -41,8 +44,8 @@ class UsageViewModel: ObservableObject {
             } catch let error as UsageError {
                 switch error {
                 case .cookieExpired, .missingCookie:
-                    // 尝试重新登录
-                    await attemptRelogin()
+                    self.error = "登录已过期，请重新登录"
+                    self.showLoginPrompt = true
                 default:
                     self.error = error.errorDescription
                 }
@@ -53,52 +56,25 @@ class UsageViewModel: ObservableObject {
         }
     }
 
-    // MARK: - 重新登录
+    // MARK: - 登录后刷新
 
-    private func attemptRelogin() async {
-        guard let (username, password) = getCredentials() else {
-            self.error = "请先配置账号密码"
-            self.isLoading = false
-            return
-        }
-
-        isLoggingIn = true
-        error = "登录已过期，正在重新登录..."
-
+    func refreshAfterLogin() async {
         do {
-            let success = try await LoginService.shared.performLogin(username: username, password: password)
-            if success {
-                // 重新获取数据
-                let data = try await UsageAPIClient.shared.fetchUsage()
-                self.usageData = data
-                self.lastUpdated = data.lastUpdated
-                self.error = nil
+            let data = try await UsageAPIClient.shared.fetchUsage()
+            self.usageData = data
+            self.lastUpdated = data.lastUpdated
+            self.error = nil
+            self.showLoginPrompt = false
 
-                if let quota = data.quotaInfo {
-                    AppDelegate.shared?.updateStatusItem(
-                        fiveHour: quota.fiveHourPercent,
-                        week: quota.weekPercent,
-                        month: quota.monthPercent
-                    )
-                }
-            } else {
-                self.error = "登录失败，请检查账号密码"
+            if let quota = data.quotaInfo {
+                AppDelegate.shared?.updateStatusItem(
+                    fiveHour: quota.fiveHourPercent,
+                    week: quota.weekPercent,
+                    month: quota.monthPercent
+                )
             }
         } catch {
-            self.error = "登录失败: \(error.localizedDescription)"
+            self.error = "获取数据失败: \(error.localizedDescription)"
         }
-
-        isLoggingIn = false
-    }
-
-    // MARK: - 获取保存的凭证
-
-    private func getCredentials() -> (String, String)? {
-        guard let username = UserDefaults.standard.string(forKey: "aliyunUsername"),
-              let password = UserDefaults.standard.string(forKey: "aliyunPassword"),
-              !username.isEmpty, !password.isEmpty else {
-            return nil
-        }
-        return (username, password)
     }
 }

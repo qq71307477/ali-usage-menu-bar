@@ -7,14 +7,9 @@ import { join } from 'path';
 
 const LOGIN_URL = 'https://bailian.console.aliyun.com/cn-beijing/?tab=coding-plan';
 
-// 从命令行参数或环境变量获取账号密码
-const username = process.argv[2] || process.env.ALIYUN_USERNAME;
-const password = process.argv[3] || process.env.ALIYUN_PASSWORD;
-
-if (!username || !password) {
-  console.log(JSON.stringify({ success: false, error: '请提供账号密码' }));
-  process.exit(1);
-}
+// 账号密码参数（可选，用于提示用户）
+const username = process.argv[2] || process.env.ALIYUN_USERNAME || '';
+const password = process.argv[3] || process.env.ALIYUN_PASSWORD || '';
 
 async function login() {
   let browser = null;
@@ -23,7 +18,8 @@ async function login() {
     console.error('[登录] 启动浏览器...');
 
     browser = await chromium.launch({
-      headless: false,  // 有头模式，用户可以处理验证码
+      headless: false,
+      channel: 'chrome',  // 使用本机安装的 Chrome
       args: [
         '--no-sandbox',
         '--disable-blink-features=AutomationControlled'
@@ -49,47 +45,19 @@ async function login() {
     const needsLogin = await checkNeedsLogin(page);
 
     if (needsLogin) {
-      console.error('[登录] 需要登录，填写账号密码...');
+      console.error('[登录] 请在浏览器中手动完成登录（包括验证码）...');
+      console.error('[登录] 登录成功后会自动提取 Cookie');
 
-      // 点击登录按钮
-      const loginButton = await page.$('text=登录');
-      if (loginButton) {
-        await loginButton.click();
-        await page.waitForTimeout(2000);
-      }
-
-      // 在登录弹窗中填写表单
-      const loginFrame = page.frameLocator('iframe[title="login"]')
-        .frameLocator('#alibaba-login-iframe #alibaba-login-box');
-
-      // 填写账号
-      const usernameInput = loginFrame.locator('#fm-login-id');
-      await usernameInput.click();
-      await usernameInput.clear();
-      await page.waitForTimeout(300);
-      await usernameInput.pressSequentially(username, { delay: 50 });
-
-      // 填写密码
-      const passwordInput = loginFrame.locator('#fm-login-password');
-      await passwordInput.click();
-      await passwordInput.clear();
-      await page.waitForTimeout(300);
-      await passwordInput.pressSequentially(password, { delay: 50 });
-
-      // 点击登录
-      const submitButton = loginFrame.getByRole('button', { name: '立即登录' });
-      await submitButton.click();
-
-      console.error('[登录] 请在浏览器中完成验证（如滑动验证码）...');
-
-      // 等待登录完成（最多 2 分钟）
-      for (let i = 0; i < 12; i++) {
+      // 等待登录完成（最多 5 分钟）
+      for (let i = 0; i < 30; i++) {
         await page.waitForTimeout(10000);
         if (!await checkNeedsLogin(page)) {
-          console.error('[登录] 登录成功！');
+          console.error('[登录] 检测到登录成功！');
           break;
         }
-        console.error(`[登录] 等待登录完成... (${i + 1}/12)`);
+        if (i % 3 === 0) {
+          console.error(`[登录] 等待登录完成... (${Math.floor(i / 6) + 1}/5 分钟)`);
+        }
       }
     }
 
