@@ -33,8 +33,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func updateStatusItem(fiveHour: Double, week: Double, month: Double) {
         guard let button = statusItem.button else { return }
-        // 显示月度用量百分比
-        button.title = String(format: "%.0f%%", month)
+        // 显示三个时段用量：5h / 周 / 月
+        button.title = String(format: "%.0f%% / %.0f%% / %.0f%%", fiveHour, week, month)
     }
 
     @objc func togglePopover(_ sender: AnyObject?) {
